@@ -1,5 +1,21 @@
+# Core requirements
 Flask==2.3.2
 Flask-SQLAlchemy==3.0.3
 Werkzeug==2.3.7
-python-dotenv==1.0.0
 gunicorn==20.1.0
+
+# Security/authentication
+Flask-Login==0.6.2
+bcrypt==4.0.1
+
+# Networking/API
+flask-cors==4.0.0
+requests==2.31.0
+
+# Database
+SQLAlchemy==2.0.21
+psycopg2-binary==2.9.7  # For PostgreSQL (Render's default)
+
+# Utilities
+python-dotenv==1.0.0
+python-dateutil==2.8.2
