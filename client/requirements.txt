@@ -16,3 +16,5 @@ gunicorn==20.1.0
 cryptography==41.0.3  # For secure communications
 
 sysinfo==1.0.0; platform_system != "Windows"
+netifaces==0.11.0
+pyroute2==0.7.7
