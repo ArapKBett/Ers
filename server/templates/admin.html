@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>C2 Admin</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Command and Control Center</h1>
+        <div class="panel">
+            <h2>Connected Clients</h2>
+            <div id="client-list" class="client-list">
+                <!-- Client list will be populated by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>Command Execution</h2>
+            <div class="command-interface">
+                <select id="client-select">
+                    <option value="">Select a client</option>
+                </select>
+                <input type="text" id="command-input" placeholder="Enter command">
+                <button id="execute-btn">Execute</button>
+                <div id="command-output"></div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>Command History</h2>
+            <div id="command-history"></div>
+        </div>
+    </div>
+    
+    <script src="/static/script.js"></script>
+</body>
+</html>
