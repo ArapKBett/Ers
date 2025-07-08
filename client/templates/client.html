@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hi Client</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard</h1>
+        <div class="status-box">
+            <h2>System Status</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">Hostname:</span>
+                    <span class="value">{{ info.hostname }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">OS:</span>
+                    <span class="value">{{ info.os }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Last Check-in:</span>
+                    <span class="value">{{ info.last_checkin }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Status:</span>
+                    <span class="value status-{{ info.status.lower() }}">{{ info.status }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="disclaimer">
+            <p>Watch out.</p>
+            <p>Not for production use.</p>
+        </div>
+    </div>
+</body>
+</html>
