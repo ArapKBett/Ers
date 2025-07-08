@@ -4,7 +4,7 @@ psutil==5.9.5  # For enhanced system monitoring
 python-dotenv==1.0.0
 
 # Cross-platform system tools
-wmi-client==1.5.1  # Windows management (if on Windows)
+# wmi-client==1.5.1  # Windows management (if on Windows)
 py-cpuinfo==9.0.0  # CPU information
 netifaces==0.11.0  # Network interface data
 
@@ -14,3 +14,5 @@ gunicorn==20.1.0
 
 # Security
 cryptography==41.0.3  # For secure communications
+
+sysinfo==1.0.0; platform_system != "Windows"
